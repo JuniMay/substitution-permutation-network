@@ -129,7 +129,7 @@ OJ 提交评测结果如下
 
 线性攻击的实现包括 `scripts/datagen.py`，`src/encryptor.c` 和 `src/linear.c`。
 
-`datagen.py` 首先根据密钥和数量生成数据用于线性分析，然后将数据写入 `data.txt` 中，具体实现可参见代码。
+`datagen.py` 首先根据命令行参数中的密钥和数量生成数据用于线性分析，然后将数据写入 `data.txt` 中，具体实现可参见代码。
 
 `linear.c` 中实现了线性攻击算法。首先定义 S 盒的逆参数
 
@@ -206,16 +206,68 @@ uint8_t key = linear_attack(size, plaintexts, ciphertexts);
 gettimeofday(&ed, NULL);
 ```
 
-### 运行结果
-
-首先使用密钥 `00111010100101001101011000111111` 生成 8000 条数据并且保存。
+此外，`linear` 需要从命令行读取数据文件的路径，并且从数据文件中读取明文密文对。
 
 ```c
-data = datagen(0b00111010100101001101011000111111, 8000)
+int main(int argc, char* argv[]) {
+  if (argc != 2) {
+    printf("Usage: %s <data>\n", argv[0]);
+    return 1;
+  }
+
+  FILE* pair_file = fopen(argv[1], "r");
+
+  uint16_t plaintexts[MAX_SIZE];
+  uint16_t ciphertexts[MAX_SIZE];
+
+  size_t size = 0;
+
+  while (fscanf(pair_file, "%hu %hu", &plaintexts[size], &ciphertexts[size]) !=
+         EOF) {
+    size++;
+  }
+
+  fclose(pair_file);
+	
+  /* ... attack and timing ... */
+
+  return 0;
+}
 ```
 
-之后使用 `linear` 进行线性密码分析，其中第五轮的密钥应当是 `1101011000111111` 期望得到 $L_1=0110, L_2=1111$
+### 运行测试
 
-![image-20231016085813167](./report.assets/image-20231016085813167.png)
+为了方便测试，使用 Makefile 进行批处理（`.exe` 后缀便于区分可执行文件和跨平台）
 
-最终得到正确结果，用时 12416 微秒。
+```makefile
+DATA = data/linear.txt
+KEY = 00111010100101001101011000111111
+SIZE = 8000
+
+.PHONY: run encryptor linear clean
+
+run:
+	gcc -o main.exe src/main.c
+	./main.exe
+
+encryptor:
+	gcc -o encryptor.exe src/encryptor.c
+
+linear: encryptor
+	gcc -o linear.exe src/linear.c
+	python scripts/datagen.py $(KEY) $(SIZE) -o $(DATA)
+	./linear.exe $(DATA)
+
+clean:
+	rm -f *.exe
+```
+
+之后首先使用密钥 `00111010100101001101011000111111` 生成 8000 条数据进行线性分析。第五轮密钥为 `1101011000111111`，对应的 $L_1=0110, L_2=1111$，使用 `make` 运行并且指定参数
+
+![image-20231016092301849](./report.assets/image-20231016092301849.png)
+
+可以得到正确的答案 `01101111` 并且耗时 11593 微秒。
+
+之后对不同的数据规模进行尝试，数据规模过小时（此处为 `3000`）无法分析出正确的结果
+
+![image-20231016092854215](./report.assets/image-20231016092854215.png)

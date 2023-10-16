@@ -1,6 +1,7 @@
 
 import random
 import subprocess
+import argparse
 from typing import List, Tuple
 
 # encryptor executable path
@@ -36,10 +37,27 @@ def datagen(key: int, size: int) -> List[Tuple[int, int]]:
     return list(zip(plaintexts, ciphertexts))
 
 if __name__ == '__main__':
-    # generate data
-    data = datagen(0b00111010100101001101011000111111, 8000)
+    # generate data from cli argument
+    parser = argparse.ArgumentParser()
+    parser.add_argument('key', help='key to use for encryption', type=str)
+    parser.add_argument('size', help='number of plaintext-ciphertext pairs to generate', type=int)
+    parser.add_argument('-o', '--output', help='output file', type=str)
+    
+    args = parser.parse_args()
+    
+    key = int(args.key, 2)
+    size = args.size
+    output = args.output
+    
+    print(f'Generating {size} plaintext-ciphertext pairs with key {key:032b}')
+    
+    data = datagen(int(args.key, 2), args.size)
+    
     # write data to file
-    with open('data.txt', 'w') as f:
+    with open(output, 'w') as f:
+
+        print(f'Writing data to {output}')
+        
         for p, c in data:
             f.write(f'{p} {c}\n')
     

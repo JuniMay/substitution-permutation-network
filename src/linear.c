@@ -8,7 +8,8 @@ const uint8_t PI_S_INV[16] = {0xE, 0x3, 0x4, 0x8, 0x1, 0xC, 0xA, 0xF,
                               0x7, 0xD, 0x9, 0x6, 0xB, 0x2, 0x0, 0x5};
 
 /// Linear attack
-uint8_t linear_attack(size_t size, uint16_t* plaintexts, uint16_t* ciphertexts) {
+uint8_t
+linear_attack(size_t size, uint16_t* plaintexts, uint16_t* ciphertexts) {
   size_t count[256];
   for (size_t i = 0; i <= 0xff; i++) {
     count[i] = 0;
@@ -63,7 +64,12 @@ uint8_t linear_attack(size_t size, uint16_t* plaintexts, uint16_t* ciphertexts) 
 #define MAX_SIZE 30000
 
 int main(int argc, char* argv[]) {
-  FILE* pair_file = fopen("data.txt", "r");
+  if (argc != 2) {
+    printf("Usage: %s <data>\n", argv[0]);
+    return 1;
+  }
+
+  FILE* pair_file = fopen(argv[1], "r");
 
   uint16_t plaintexts[MAX_SIZE];
   uint16_t ciphertexts[MAX_SIZE];

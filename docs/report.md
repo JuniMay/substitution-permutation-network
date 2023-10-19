@@ -450,3 +450,7 @@ linear_attack(size_t size, uint16_t* plaintexts, uint16_t* ciphertexts) {
 ## 总结
 
 在实验中编程实现了 SPN 的加密算法，并且实现了使用线性攻击破解 SPN 第五轮密钥第二、第四部分内容的方法。此外还对破解 SPN 完整的密钥比特进行了尝试。
+
+---
+
+代码已上传至 [GitHub](https://github.com/JuniMay/substitution-permutation-network)，计划在提交截止之后设置为 Public。
